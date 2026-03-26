@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCID Mapper — Clinical Significance Assessor</title>
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-hover: #f0f4f8;
+  --text-primary: #1a1a2e;
+  --text-secondary: #555770;
+  --text-muted: #8888a0;
+  --border: #e0e0e8;
+  --border-focus: #4361ee;
+  --accent: #4361ee;
+  --accent-hover: #3a56d4;
+  --accent-light: #e8edff;
+  --success: #2ecc71;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  --transition: 0.2s ease;
+}
+
+body.dark {
+  --bg-primary: #0f0f1a;
+  --bg-secondary: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-hover: #1e2a4a;
+  --text-primary: #e8e8f0;
+  --text-secondary: #b0b0c8;
+  --text-muted: #707090;
+  --border: #2a2a4a;
+  --border-focus: #6380f0;
+  --accent: #6380f0;
+  --accent-hover: #7a94f8;
+  --accent-light: #1a2040;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
+  min-height: 100vh;
+}
+
+/* ===== Header ===== */
+.app-header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  color: #fff;
+  padding: 1.8rem 2rem 1.2rem;
+  text-align: center;
+  position: relative;
+}
+body.dark .app-header {
+  background: linear-gradient(135deg, #0a0a14 0%, #0f1528 50%, #0a2040 100%);
+}
+.app-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-bottom: 0.2rem;
+}
+.app-header h1 span { color: #6380f0; }
+.app-header .subtitle {
+  font-size: 0.95rem;
+  color: #b0c0e0;
+  font-weight: 400;
+}
+.theme-toggle {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+.theme-toggle:hover, .theme-toggle:focus { background: rgba(255,255,255,0.25); outline: none; }
+
+/* ===== Examples Bar ===== */
+.examples-bar {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.example-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.example-btn:hover, .example-btn:focus {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ===== Tabs ===== */
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid var(--border);
+  background: var(--bg-secondary);
+  overflow-x: auto;
+}
+.tab-btn {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: all var(--transition);
+}
+.tab-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.tab-btn:focus { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+.tab-panel { display: none; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+/* ===== Cards ===== */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.2rem 1.4rem;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.card-title .icon { font-size: 1.1rem; }
+
+/* ===== Forms ===== */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.form-group label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.form-group input, .form-group select {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-family: var(--font-sans);
+  transition: border var(--transition);
+}
+.form-group input:focus, .form-group select:focus {
+  border-color: var(--border-focus);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(67,97,238,0.15);
+}
+
+/* ===== Buttons ===== */
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 1.4rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.btn-secondary:hover { background: var(--bg-hover); border-color: var(--accent); }
+.btn-secondary:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.btn-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Results & Classification ===== */
+.result-badge {
+  display: inline-block;
+  padding: 0.35rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.badge-green { background: rgba(46,204,113,0.15); color: #27ae60; border: 1px solid rgba(46,204,113,0.3); }
+.badge-amber { background: rgba(243,156,18,0.15); color: #d68910; border: 1px solid rgba(243,156,18,0.3); }
+.badge-red { background: rgba(231,76,60,0.15); color: #c0392b; border: 1px solid rgba(231,76,60,0.3); }
+body.dark .badge-green { color: #2ecc71; }
+body.dark .badge-amber { color: #f5b041; }
+body.dark .badge-red { color: #e74c3c; }
+
+.classification-box {
+  padding: 1rem 1.2rem;
+  border-radius: var(--radius-md);
+  margin-top: 0.8rem;
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+.classification-green { background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.25); }
+.classification-amber { background: rgba(243,156,18,0.08); border: 1px solid rgba(243,156,18,0.25); }
+.classification-red { background: rgba(231,76,60,0.08); border: 1px solid rgba(231,76,60,0.25); }
+
+/* ===== SVG containers ===== */
+.svg-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+.svg-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== Tables ===== */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.data-table th, .data-table td {
+  padding: 0.5rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.data-table th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.5px;
+}
+.data-table tr:hover { background: var(--bg-hover); }
+
+/* ===== MCID Library ===== */
+.mcid-library-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+}
+.mcid-library-item {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-size: 0.82rem;
+}
+.mcid-library-item:hover, .mcid-library-item:focus {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  outline: none;
+}
+.mcid-library-item .lib-name { font-weight: 600; color: var(--text-primary); }
+.mcid-library-item .lib-value { color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.8rem; }
+
+/* ===== Report ===== */
+.report-text {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  font-size: 0.88rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  font-family: var(--font-sans);
+  color: var(--text-primary);
+}
+.report-text strong { color: var(--accent); }
+
+/* ===== Sensitivity table highlights ===== */
+.sens-current { background: var(--accent-light) !important; font-weight: 600; }
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .app-header h1 { font-size: 1.4rem; }
+  .form-row { grid-template-columns: 1fr; }
+  .tab-btn { padding: 0.6rem 0.8rem; font-size: 0.8rem; }
+  .tab-panel { padding: 1rem; }
+}
+
+/* ===== Gauge ===== */
+.gauge-label {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-top: 0.3rem;
+}
+</style>
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="app-header">
+  <h1>MCID <span>Mapper</span></h1>
+  <div class="subtitle">Map meta-analysis results against Minimal Clinically Important Differences</div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">&#9790;</button>
+</header>
+
+<!-- ===== Examples Bar ===== -->
+<div class="examples-bar">
+  <button class="example-btn" data-example="exercise" aria-label="Load exercise for depression example">Exercise for Depression</button>
+  <button class="example-btn" data-example="statins" aria-label="Load statins for LDL example">Statins for LDL</button>
+  <button class="example-btn" data-example="homeopathy" aria-label="Load homeopathy for pain example">Homeopathy for Pain</button>
+</div>
+
+<!-- ===== Tabs ===== -->
+<nav class="tab-bar" role="tablist">
+  <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="panel-input" id="tab-input" data-tab="input">Data Input</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-viz" id="tab-viz" data-tab="viz">Visualization</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-sensitivity" id="tab-sensitivity" data-tab="sensitivity">Sensitivity</button>
+  <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-report" id="tab-report" data-tab="report">Report</button>
+</nav>
+
+<!-- ===== Tab 1: Data Input ===== -->
+<div class="tab-panel active" role="tabpanel" id="panel-input" aria-labelledby="tab-input">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128202;</span> Meta-Analysis Result</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="inputEffect">Pooled Effect Estimate</label>
+        <input type="number" id="inputEffect" step="any" placeholder="e.g. -0.62">
+      </div>
+      <div class="form-group">
+        <label for="inputCILower">95% CI Lower</label>
+        <input type="number" id="inputCILower" step="any" placeholder="e.g. -0.81">
+      </div>
+      <div class="form-group">
+        <label for="inputCIUpper">95% CI Upper</label>
+        <input type="number" id="inputCIUpper" step="any" placeholder="e.g. -0.42">
+      </div>
+      <div class="form-group">
+        <label for="inputEffectType">Effect Type</label>
+        <select id="inputEffectType">
+          <option value="SMD">SMD (Standardized Mean Difference)</option>
+          <option value="MD">MD (Mean Difference)</option>
+          <option value="RR">RR (Risk Ratio)</option>
+          <option value="OR">OR (Odds Ratio)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127919;</span> MCID Threshold</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="inputMCID">MCID Value</label>
+        <input type="number" id="inputMCID" step="any" placeholder="e.g. 0.5">
+      </div>
+      <div class="form-group">
+        <label for="mcidDirection">Beneficial Direction</label>
+        <select id="mcidDirection">
+          <option value="negative">Lower is better (negative effect)</option>
+          <option value="positive">Higher is better (positive effect)</option>
+          <option value="ratio_below">Below 1 is better (RR/OR &lt; 1)</option>
+          <option value="ratio_above">Above 1 is better (RR/OR &gt; 1)</option>
+        </select>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnAnalyze" aria-label="Run MCID analysis">Analyze Clinical Significance</button>
+      <button class="btn-secondary" id="btnClear" aria-label="Clear all inputs">Clear</button>
+      <button class="btn-secondary" id="btnSave" aria-label="Save data to local storage">Save</button>
+      <button class="btn-secondary" id="btnLoad" aria-label="Load data from local storage">Load</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128218;</span> MCID Reference Library</div>
+    <div class="mcid-library-grid" id="mcidLibrary"></div>
+  </div>
+</div>
+
+<!-- ===== Tab 2: Visualization ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-viz" aria-labelledby="tab-viz">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#127922;</span> Clinical Significance Classification</div>
+    <div id="classificationResult"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#9201;</span> Clinical Significance Gauge</div>
+    <div class="svg-container" id="gaugeContainer"></div>
+    <div class="gauge-label" id="gaugeLabel"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128200;</span> Confidence Interval vs MCID</div>
+    <div class="svg-container" id="ciPlotContainer"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128201;</span> Proportion Beyond MCID</div>
+    <div id="proportionResult"></div>
+  </div>
+</div>
+
+<!-- ===== Tab 3: Sensitivity ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-sensitivity" aria-labelledby="tab-sensitivity">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128270;</span> Sensitivity Analysis: Varying MCID</div>
+    <div id="sensitivityTableContainer"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128200;</span> Classification Across MCID Values</div>
+    <div class="svg-container" id="sensitivityChartContainer"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128161;</span> Tipping Point</div>
+    <div id="tippingPointResult"></div>
+  </div>
+</div>
+
+<!-- ===== Tab 4: Report ===== -->
+<div class="tab-panel" role="tabpanel" id="panel-report" aria-labelledby="tab-report">
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128196;</span> Methods Text</div>
+    <div class="report-text" id="reportMethods"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128172;</span> Plain-Language Interpretation</div>
+    <div class="report-text" id="reportInterpretation"></div>
+  </div>
+  <div class="card">
+    <div class="card-title"><span class="icon">&#128190;</span> Export</div>
+    <div class="btn-row">
+      <button class="btn-primary" id="btnExportCSV" aria-label="Export results as CSV">Export CSV</button>
+      <button class="btn-secondary" id="btnExportJSON" aria-label="Export results as JSON">Export JSON</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================================================================
+   MCID Mapper — IIFE
+   =================================================================== */
+(function() {
+'use strict';
+
+/* ----- Utility: escapeHtml ----- */
+function escapeHtml(str) {
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(String(str)));
+  return d.innerHTML;
+}
+
+/* ----- Utility: csvSafe ----- */
+function csvSafe(val) {
+  var s = String(val == null ? '' : val);
+  if (/^[=+@\t\r]/.test(s)) s = "'" + s;
+  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+    s = '"' + s.replace(/"/g, '""') + '"';
+  }
+  return s;
+}
+
+/* ----- Utility: normalCDF (standard normal) ----- */
+function normalCDF(x) {
+  /* Abramowitz & Stegun 26.2.17 approximation */
+  var a1 =  0.254829592;
+  var a2 = -0.284496736;
+  var a3 =  1.421413741;
+  var a4 = -1.453152027;
+  var a5 =  1.061405429;
+  var p  =  0.3275911;
+  var sign = 1;
+  if (x < 0) { sign = -1; }
+  x = Math.abs(x) / Math.SQRT2;
+  var t = 1.0 / (1.0 + p * x);
+  var y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+  return 0.5 * (1.0 + sign * y);
+}
+
+/* ----- Utility: normalQuantile (inverse CDF, Beasley-Springer-Moro) ----- */
+function normalQuantile(p) {
+  if (p <= 0) return -Infinity;
+  if (p >= 1) return Infinity;
+  if (p === 0.5) return 0;
+  /* Rational approximation */
+  var a = [-3.969683028665376e+01, 2.209460984245205e+02,
+           -2.759285104469687e+02, 1.383577518672690e+02,
+           -3.066479806614716e+01, 2.506628277459239e+00];
+  var b = [-5.447609879822406e+01, 1.615858368580409e+02,
+           -1.556989798598866e+02, 6.680131188771972e+01,
+           -1.328068155288572e+01];
+  var c = [-7.784894002430293e-03, -3.223964580411365e-01,
+           -2.400758277161838e+00, -2.549732539343734e+00,
+            4.374664141464968e+00, 2.938163982698783e+00];
+  var d = [7.784695709041462e-03, 3.224671290700398e-01,
+           2.445134137142996e+00, 3.754408661907416e+00];
+  var pLow = 0.02425, pHigh = 1 - pLow;
+  var q, r;
+  if (p < pLow) {
+    q = Math.sqrt(-2 * Math.log(p));
+    return (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+            ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  } else if (p <= pHigh) {
+    q = p - 0.5;
+    r = q * q;
+    return (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q /
+           (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  } else {
+    q = Math.sqrt(-2 * Math.log(1 - p));
+    return -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) /
+             ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+}
+
+/* ----- Constants: MCID Library ----- */
+var MCID_LIBRARY = [
+  { name: 'Pain VAS (0-100mm)', mcid: 10, type: 'MD', direction: 'negative', desc: 'MCID = 10 mm (MD)' },
+  { name: 'Pain (generic SMD)', mcid: 0.5, type: 'SMD', direction: 'negative', desc: 'MCID = 0.5 SMD' },
+  { name: 'SF-36 Physical', mcid: 3, type: 'MD', direction: 'positive', desc: 'MCID = 3 points (MD)' },
+  { name: '6-Minute Walk Test', mcid: 30, type: 'MD', direction: 'positive', desc: 'MCID = 30 m (MD)' },
+  { name: 'HbA1c', mcid: 0.5, type: 'MD', direction: 'negative', desc: 'MCID = 0.5% (MD)' },
+  { name: 'Depression (BDI-II)', mcid: 5, type: 'MD', direction: 'negative', desc: 'MCID = 5 points (MD)' },
+  { name: 'All-Cause Mortality', mcid: 0.95, type: 'RR', direction: 'ratio_below', desc: 'MCID = RR 0.95 (5% reduction)' },
+  { name: 'Cohen Small (SMD)', mcid: 0.2, type: 'SMD', direction: 'negative', desc: 'MCID = 0.2 (small effect)' },
+  { name: 'Cohen Medium (SMD)', mcid: 0.5, type: 'SMD', direction: 'negative', desc: 'MCID = 0.5 (medium effect)' },
+  { name: 'Cohen Large (SMD)', mcid: 0.8, type: 'SMD', direction: 'negative', desc: 'MCID = 0.8 (large effect)' }
+];
+
+/* ----- Built-in Examples ----- */
+var EXAMPLES = {
+  exercise: {
+    effect: -0.62, ciLower: -0.81, ciUpper: -0.42,
+    effectType: 'SMD', mcid: 0.5, direction: 'negative',
+    label: 'Exercise for Depression'
+  },
+  statins: {
+    effect: -38, ciLower: -42, ciUpper: -34,
+    effectType: 'MD', mcid: 25, direction: 'negative',
+    label: 'Statins for LDL'
+  },
+  homeopathy: {
+    effect: -0.11, ciLower: -0.20, ciUpper: -0.02,
+    effectType: 'SMD', mcid: 0.5, direction: 'negative',
+    label: 'Homeopathy for Pain'
+  }
+};
+
+/* ----- State ----- */
+var state = {
+  effect: null,
+  ciLower: null,
+  ciUpper: null,
+  effectType: 'SMD',
+  mcid: null,
+  direction: 'negative',
+  classification: null,
+  probBeyond: null,
+  se: null
+};
+
+/* ----- DOM References ----- */
+var $inputEffect = document.getElementById('inputEffect');
+var $inputCILower = document.getElementById('inputCILower');
+var $inputCIUpper = document.getElementById('inputCIUpper');
+var $inputEffectType = document.getElementById('inputEffectType');
+var $inputMCID = document.getElementById('inputMCID');
+var $mcidDirection = document.getElementById('mcidDirection');
+var $btnAnalyze = document.getElementById('btnAnalyze');
+var $btnClear = document.getElementById('btnClear');
+var $btnSave = document.getElementById('btnSave');
+var $btnLoad = document.getElementById('btnLoad');
+var $btnExportCSV = document.getElementById('btnExportCSV');
+var $btnExportJSON = document.getElementById('btnExportJSON');
+var $classificationResult = document.getElementById('classificationResult');
+var $gaugeContainer = document.getElementById('gaugeContainer');
+var $gaugeLabel = document.getElementById('gaugeLabel');
+var $ciPlotContainer = document.getElementById('ciPlotContainer');
+var $proportionResult = document.getElementById('proportionResult');
+var $sensitivityTableContainer = document.getElementById('sensitivityTableContainer');
+var $sensitivityChartContainer = document.getElementById('sensitivityChartContainer');
+var $tippingPointResult = document.getElementById('tippingPointResult');
+var $reportMethods = document.getElementById('reportMethods');
+var $reportInterpretation = document.getElementById('reportInterpretation');
+
+/* ----- localStorage key ----- */
+var LS_KEY = 'mcid-data';
+
+/* ===================================================================
+   Core Analysis
+   =================================================================== */
+
+/**
+ * Determine whether effect "exceeds" MCID, depending on direction.
+ * Returns the absolute magnitude of the effect and the MCID for comparison.
+ * For ratio measures below 1, we compare on log scale.
+ */
+function getEffectMagnitude(effect, mcid, direction) {
+  if (direction === 'negative') {
+    /* Lower is better: effect is negative, MCID is positive threshold of |effect| */
+    return { mag: Math.abs(effect), threshold: Math.abs(mcid) };
+  } else if (direction === 'positive') {
+    return { mag: effect, threshold: mcid };
+  } else if (direction === 'ratio_below') {
+    /* RR/OR < 1 is better. Compare on log scale: |log(effect)| vs |log(mcid)| */
+    return { mag: Math.abs(Math.log(effect)), threshold: Math.abs(Math.log(mcid)) };
+  } else if (direction === 'ratio_above') {
+    return { mag: Math.log(effect), threshold: Math.log(mcid) };
+  }
+  return { mag: Math.abs(effect), threshold: Math.abs(mcid) };
+}
+
+/**
+ * Classify the clinical significance.
+ * Returns: 'significant', 'likely_significant', 'uncertain', 'not_significant'
+ */
+function classify(effect, ciLower, ciUpper, mcid, direction) {
+  var lo, hi, thresh;
+  if (direction === 'negative') {
+    /* Effect is negative. CI lower is further from 0, CI upper is closer.
+       "Beyond MCID" means |value| >= mcid. We work in absolute space. */
+    lo = Math.abs(ciUpper); /* smaller magnitude end */
+    hi = Math.abs(ciLower); /* larger magnitude end */
+    thresh = Math.abs(mcid);
+    var ptEst = Math.abs(effect);
+    if (lo >= thresh) return 'significant';           /* entire CI beyond */
+    if (ptEst >= thresh && lo < thresh) return 'likely_significant';
+    if (ptEst < thresh && hi >= thresh) return 'uncertain';
+    return 'not_significant';
+  } else if (direction === 'positive') {
+    thresh = mcid;
+    if (ciLower >= thresh) return 'significant';
+    if (effect >= thresh && ciLower < thresh) return 'likely_significant';
+    if (effect < thresh && ciUpper >= thresh) return 'uncertain';
+    return 'not_significant';
+  } else if (direction === 'ratio_below') {
+    /* RR/OR < 1 is better. More extreme = smaller value. */
+    /* On log scale: log(effect) is negative. Threshold = |log(mcid)| */
+    var logEff = Math.log(effect);
+    var logLo = Math.log(ciLower);
+    var logHi = Math.log(ciUpper);
+    thresh = Math.abs(Math.log(mcid));
+    /* "Beyond MCID" means |log(value)| >= thresh, i.e., log(value) <= -thresh */
+    if (logHi <= -thresh) return 'significant';       /* entire CI beyond */
+    if (logEff <= -thresh && logHi > -thresh) return 'likely_significant';
+    if (logEff > -thresh && logLo <= -thresh) return 'uncertain';
+    return 'not_significant';
+  } else { /* ratio_above */
+    var logEff2 = Math.log(effect);
+    var logLo2 = Math.log(ciLower);
+    thresh = Math.log(mcid);
+    if (logLo2 >= thresh) return 'significant';
+    if (logEff2 >= thresh && logLo2 < thresh) return 'likely_significant';
+    if (logEff2 < thresh && Math.log(ciUpper) >= thresh) return 'uncertain';
+    return 'not_significant';
+  }
+}
+
+/**
+ * Compute P(true effect exceeds MCID) assuming normal posterior.
+ * SE estimated from CI width: SE = (upper - lower) / (2 * 1.96)
+ */
+function computeProbBeyondMCID(effect, ciLower, ciUpper, mcid, direction) {
+  var se = (ciUpper - ciLower) / (2 * 1.96);
+  if (se <= 0) return { prob: 0, se: 0 };
+
+  if (direction === 'negative') {
+    /* P(|true effect| > mcid) = P(true effect < -mcid) since effect is negative */
+    var z = (-Math.abs(mcid) - effect) / se;
+    return { prob: normalCDF(z), se: se };
+  } else if (direction === 'positive') {
+    var z2 = (effect - mcid) / se;
+    return { prob: normalCDF(z2), se: se };
+  } else if (direction === 'ratio_below') {
+    /* Work on log scale */
+    var logEff = Math.log(effect);
+    var logSE = (Math.log(ciUpper) - Math.log(ciLower)) / (2 * 1.96);
+    if (logSE <= 0) return { prob: 0, se: 0 };
+    var logThresh = Math.log(mcid); /* negative */
+    var z3 = (logThresh - logEff) / logSE; /* P(logEffect < logThresh) */
+    return { prob: normalCDF(z3), se: logSE };
+  } else { /* ratio_above */
+    var logEff2 = Math.log(effect);
+    var logSE2 = (Math.log(ciUpper) - Math.log(ciLower)) / (2 * 1.96);
+    if (logSE2 <= 0) return { prob: 0, se: 0 };
+    var z4 = (logEff2 - Math.log(mcid)) / logSE2;
+    return { prob: normalCDF(z4), se: logSE2 };
+  }
+}
+
+function classificationLabel(cls) {
+  switch (cls) {
+    case 'significant': return 'Clinically Significant';
+    case 'likely_significant': return 'Likely Clinically Significant';
+    case 'uncertain': return 'Uncertain Clinical Significance';
+    case 'not_significant': return 'Not Clinically Significant';
+    default: return 'Unknown';
+  }
+}
+
+function classificationColor(cls) {
+  switch (cls) {
+    case 'significant': return 'green';
+    case 'likely_significant': return 'green';
+    case 'uncertain': return 'amber';
+    case 'not_significant': return 'red';
+    default: return 'red';
+  }
+}
+
+function probColorClass(prob) {
+  if (prob >= 0.80) return 'green';
+  if (prob >= 0.50) return 'amber';
+  return 'red';
+}
+
+/* ===================================================================
+   Rendering
+   =================================================================== */
+
+function renderClassification() {
+  if (state.classification === null) {
+    $classificationResult.innerHTML = '<p style="color:var(--text-muted)">Run analysis from the Data Input tab first.</p>';
+    return;
+  }
+  var cls = state.classification;
+  var color = classificationColor(cls);
+  var label = classificationLabel(cls);
+  var html = '<span class="result-badge badge-' + color + '">' + escapeHtml(label) + '</span>';
+  html += '<div class="classification-box classification-' + color + '">';
+  html += '<strong>Effect:</strong> ' + escapeHtml(formatNum(state.effect));
+  html += ' [95% CI: ' + escapeHtml(formatNum(state.ciLower)) + ' to ' + escapeHtml(formatNum(state.ciUpper)) + ']';
+  html += '<br><strong>MCID:</strong> ' + escapeHtml(formatNum(state.mcid));
+  html += ' (' + escapeHtml(state.effectType) + ', ' + escapeHtml(directionLabel(state.direction)) + ')';
+  html += '</div>';
+  $classificationResult.innerHTML = html;
+}
+
+function directionLabel(d) {
+  switch (d) {
+    case 'negative': return 'lower is better';
+    case 'positive': return 'higher is better';
+    case 'ratio_below': return 'below 1 is better';
+    case 'ratio_above': return 'above 1 is better';
+    default: return d;
+  }
+}
+
+function formatNum(v) {
+  if (v === null || v === undefined) return '--';
+  var n = Number(v);
+  if (!isFinite(n)) return String(v);
+  return Math.abs(n) >= 100 ? n.toFixed(1) : (Math.abs(n) >= 1 ? n.toFixed(2) : n.toFixed(3));
+}
+
+/* ----- SVG helpers ----- */
+function svgEl(tag, attrs) {
+  var el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  if (attrs) {
+    for (var k in attrs) {
+      if (attrs.hasOwnProperty(k)) el.setAttribute(k, attrs[k]);
+    }
+  }
+  return el;
+}
+
+/* ----- Gauge (speedometer) ----- */
+function renderGauge() {
+  $gaugeContainer.innerHTML = '';
+  $gaugeLabel.textContent = '';
+  if (state.probBeyond === null) {
+    $gaugeContainer.innerHTML = '<p style="color:var(--text-muted);text-align:center">No data yet.</p>';
+    return;
+  }
+  var prob = state.probBeyond;
+  var w = 320, h = 200;
+  var svg = svgEl('svg', { width: w, height: h, viewBox: '0 0 ' + w + ' ' + h });
+
+  var cx = w / 2, cy = 160, r = 120;
+  var startAngle = Math.PI;  /* 180 deg = left */
+  var endAngle = 0;          /* 0 deg = right */
+
+  /* Background arc */
+  function arcPath(r, a1, a2) {
+    var x1 = cx + r * Math.cos(a1), y1 = cy - r * Math.sin(a1);
+    var x2 = cx + r * Math.cos(a2), y2 = cy - r * Math.sin(a2);
+    var large = (a1 - a2) > Math.PI ? 1 : 0;
+    return 'M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + large + ' 0 ' + x2 + ' ' + y2;
+  }
+
+  /* Color zones: red (0-50%), amber (50-80%), green (80-100%) */
+  var zones = [
+    { from: 0, to: 0.50, color: 'rgba(231,76,60,0.25)' },
+    { from: 0.50, to: 0.80, color: 'rgba(243,156,18,0.25)' },
+    { from: 0.80, to: 1.0, color: 'rgba(46,204,113,0.25)' }
+  ];
+  zones.forEach(function(z) {
+    var a1 = Math.PI - z.from * Math.PI;
+    var a2 = Math.PI - z.to * Math.PI;
+    var path = svgEl('path', {
+      d: arcPath(r, a1, a2),
+      fill: 'none', stroke: z.color, 'stroke-width': '24', 'stroke-linecap': 'butt'
+    });
+    svg.appendChild(path);
+  });
+
+  /* Filled arc up to prob */
+  var fillColor = prob >= 0.80 ? '#2ecc71' : (prob >= 0.50 ? '#f39c12' : '#e74c3c');
+  var probAngle = Math.PI - prob * Math.PI;
+  var fillPath = svgEl('path', {
+    d: arcPath(r, Math.PI, probAngle),
+    fill: 'none', stroke: fillColor, 'stroke-width': '24', 'stroke-linecap': 'round'
+  });
+  svg.appendChild(fillPath);
+
+  /* Needle */
+  var needleAngle = Math.PI - prob * Math.PI;
+  var nx = cx + (r - 30) * Math.cos(needleAngle);
+  var ny = cy - (r - 30) * Math.sin(needleAngle);
+  var needle = svgEl('line', {
+    x1: cx, y1: cy, x2: nx, y2: ny,
+    stroke: 'var(--text-primary)', 'stroke-width': '3', 'stroke-linecap': 'round'
+  });
+  svg.appendChild(needle);
+
+  /* Center dot */
+  var dot = svgEl('circle', { cx: cx, cy: cy, r: 6, fill: 'var(--text-primary)' });
+  svg.appendChild(dot);
+
+  /* Labels */
+  var pctText = svgEl('text', {
+    x: cx, y: cy - 30, 'text-anchor': 'middle',
+    'font-size': '28', 'font-weight': '700', fill: fillColor
+  });
+  pctText.textContent = (prob * 100).toFixed(1) + '%';
+  svg.appendChild(pctText);
+
+  /* Scale labels */
+  var labels = ['0%', '50%', '100%'];
+  var positions = [Math.PI, Math.PI / 2, 0];
+  labels.forEach(function(lbl, i) {
+    var lx = cx + (r + 18) * Math.cos(positions[i]);
+    var ly = cy - (r + 18) * Math.sin(positions[i]);
+    var t = svgEl('text', {
+      x: lx, y: ly + 4, 'text-anchor': 'middle',
+      'font-size': '11', fill: 'var(--text-muted)'
+    });
+    t.textContent = lbl;
+    svg.appendChild(t);
+  });
+
+  $gaugeContainer.appendChild(svg);
+  $gaugeLabel.textContent = 'P(true effect exceeds MCID) = ' + (prob * 100).toFixed(1) + '%';
+}
+
+/* ----- CI vs MCID Plot ----- */
+function renderCIPlot() {
+  $ciPlotContainer.innerHTML = '';
+  if (state.effect === null) {
+    $ciPlotContainer.innerHTML = '<p style="color:var(--text-muted);text-align:center">No data yet.</p>';
+    return;
+  }
+
+  var w = 600, h = 160;
+  var margin = { left: 60, right: 40, top: 30, bottom: 40 };
+  var plotW = w - margin.left - margin.right;
+  var plotH = h - margin.top - margin.bottom;
+
+  var svg = svgEl('svg', { width: w, height: h, viewBox: '0 0 ' + w + ' ' + h });
+
+  /* Determine scale */
+  var isRatio = state.direction === 'ratio_below' || state.direction === 'ratio_above';
+  var vals;
+  if (isRatio) {
+    vals = [Math.log(state.ciLower), Math.log(state.ciUpper), Math.log(state.effect)];
+    var mcidLog = Math.log(state.mcid);
+    vals.push(mcidLog);
+    if (state.direction === 'ratio_below') vals.push(0); /* log(1) = 0 */
+  } else {
+    vals = [state.ciLower, state.ciUpper, state.effect];
+    if (state.direction === 'negative') {
+      vals.push(-state.mcid);
+      vals.push(0);
+    } else {
+      vals.push(state.mcid);
+      vals.push(0);
+    }
+  }
+
+  var minV = Math.min.apply(null, vals);
+  var maxV = Math.max.apply(null, vals);
+  var range = maxV - minV;
+  if (range === 0) range = 1;
+  var pad = range * 0.15;
+  minV -= pad;
+  maxV += pad;
+
+  function scaleX(v) {
+    return margin.left + ((v - minV) / (maxV - minV)) * plotW;
+  }
+
+  var barY = margin.top + plotH / 2;
+  var barH = 16;
+
+  /* MCID threshold line */
+  var mcidVal;
+  if (isRatio) {
+    mcidVal = Math.log(state.mcid);
+  } else if (state.direction === 'negative') {
+    mcidVal = -Math.abs(state.mcid);
+  } else {
+    mcidVal = state.mcid;
+  }
+  var mcidX = scaleX(mcidVal);
+
+  /* MCID shading zone (the "clinically meaningful" side) */
+  var shadeX1, shadeX2;
+  if (state.direction === 'negative' || state.direction === 'ratio_below') {
+    shadeX1 = margin.left;
+    shadeX2 = mcidX;
+  } else {
+    shadeX1 = mcidX;
+    shadeX2 = margin.left + plotW;
+  }
+  var shade = svgEl('rect', {
+    x: shadeX1, y: margin.top, width: shadeX2 - shadeX1, height: plotH,
+    fill: 'rgba(46,204,113,0.08)'
+  });
+  svg.appendChild(shade);
+
+  /* MCID line */
+  var mcidLine = svgEl('line', {
+    x1: mcidX, y1: margin.top - 5, x2: mcidX, y2: margin.top + plotH + 5,
+    stroke: '#e74c3c', 'stroke-width': '2', 'stroke-dasharray': '6,3'
+  });
+  svg.appendChild(mcidLine);
+  var mcidLabel = svgEl('text', {
+    x: mcidX, y: margin.top - 10, 'text-anchor': 'middle',
+    'font-size': '11', 'font-weight': '600', fill: '#e74c3c'
+  });
+  mcidLabel.textContent = 'MCID';
+  svg.appendChild(mcidLabel);
+
+  /* Null line (0 or log(1)=0) */
+  var nullVal = 0;
+  if (scaleX(nullVal) >= margin.left && scaleX(nullVal) <= margin.left + plotW) {
+    var nullLine = svgEl('line', {
+      x1: scaleX(nullVal), y1: margin.top, x2: scaleX(nullVal), y2: margin.top + plotH,
+      stroke: 'var(--text-muted)', 'stroke-width': '1', 'stroke-dasharray': '3,3'
+    });
+    svg.appendChild(nullLine);
+    var nullLabel = svgEl('text', {
+      x: scaleX(nullVal), y: margin.top + plotH + 15, 'text-anchor': 'middle',
+      'font-size': '10', fill: 'var(--text-muted)'
+    });
+    nullLabel.textContent = isRatio ? '1.0' : '0';
+    svg.appendChild(nullLabel);
+  }
+
+  /* CI bar */
+  var ciLVal = isRatio ? Math.log(state.ciLower) : state.ciLower;
+  var ciUVal = isRatio ? Math.log(state.ciUpper) : state.ciUpper;
+  var effVal = isRatio ? Math.log(state.effect) : state.effect;
+
+  var ciColor = classificationColor(state.classification);
+  var ciHex = ciColor === 'green' ? '#2ecc71' : (ciColor === 'amber' ? '#f39c12' : '#e74c3c');
+
+  var ciBar = svgEl('rect', {
+    x: scaleX(ciLVal), y: barY - barH / 2,
+    width: Math.max(1, scaleX(ciUVal) - scaleX(ciLVal)), height: barH,
+    rx: 4, fill: ciHex, opacity: '0.3'
+  });
+  svg.appendChild(ciBar);
+
+  /* CI line */
+  var ciLine = svgEl('line', {
+    x1: scaleX(ciLVal), y1: barY, x2: scaleX(ciUVal), y2: barY,
+    stroke: ciHex, 'stroke-width': '3'
+  });
+  svg.appendChild(ciLine);
+
+  /* CI endpoints */
+  [ciLVal, ciUVal].forEach(function(v) {
+    var cap = svgEl('line', {
+      x1: scaleX(v), y1: barY - 8, x2: scaleX(v), y2: barY + 8,
+      stroke: ciHex, 'stroke-width': '2'
+    });
+    svg.appendChild(cap);
+  });
+
+  /* Point estimate diamond */
+  var ex = scaleX(effVal);
+  var diamond = svgEl('polygon', {
+    points: ex + ',' + (barY - 10) + ' ' + (ex + 7) + ',' + barY + ' ' + ex + ',' + (barY + 10) + ' ' + (ex - 7) + ',' + barY,
+    fill: ciHex, stroke: '#fff', 'stroke-width': '1'
+  });
+  svg.appendChild(diamond);
+
+  /* X-axis label */
+  var xLabel = svgEl('text', {
+    x: margin.left + plotW / 2, y: h - 5, 'text-anchor': 'middle',
+    'font-size': '11', fill: 'var(--text-secondary)'
+  });
+  xLabel.textContent = isRatio ? 'Log(' + state.effectType + ')' : state.effectType;
+  svg.appendChild(xLabel);
+
+  /* Effect value labels */
+  var effLabel = svgEl('text', {
+    x: ex, y: barY + barH / 2 + 18, 'text-anchor': 'middle',
+    'font-size': '10', 'font-weight': '600', fill: 'var(--text-primary)'
+  });
+  effLabel.textContent = formatNum(state.effect);
+  svg.appendChild(effLabel);
+
+  $ciPlotContainer.appendChild(svg);
+}
+
+/* ----- Proportion Beyond MCID ----- */
+function renderProportion() {
+  if (state.probBeyond === null) {
+    $proportionResult.innerHTML = '<p style="color:var(--text-muted)">No data yet.</p>';
+    return;
+  }
+  var prob = state.probBeyond;
+  var color = probColorClass(prob);
+  var html = '<span class="result-badge badge-' + color + '">' +
+    escapeHtml((prob * 100).toFixed(1) + '% probability') + '</span>';
+  html += '<div class="classification-box classification-' + color + '">';
+  html += 'Under a normal posterior approximation, there is a <strong>' +
+    escapeHtml((prob * 100).toFixed(1) + '%') + '</strong> probability that the true effect exceeds the MCID of ' +
+    escapeHtml(formatNum(state.mcid)) + '.';
+  if (prob >= 0.80) {
+    html += '<br>This provides <strong>strong evidence</strong> of clinical significance.';
+  } else if (prob >= 0.50) {
+    html += '<br>This provides <strong>moderate evidence</strong> of clinical significance.';
+  } else {
+    html += '<br>This suggests the effect is <strong>unlikely to be clinically significant</strong>.';
+  }
+  html += '</div>';
+  $proportionResult.innerHTML = html;
+}
+
+/* ----- Sensitivity Analysis ----- */
+function renderSensitivity() {
+  if (state.effect === null || state.mcid === null) {
+    $sensitivityTableContainer.innerHTML = '<p style="color:var(--text-muted)">Run analysis first.</p>';
+    $sensitivityChartContainer.innerHTML = '';
+    $tippingPointResult.innerHTML = '';
+    return;
+  }
+
+  var baseMCID = Math.abs(state.mcid);
+  if (baseMCID === 0) baseMCID = 0.1;
+
+  /* Generate range of MCIDs: 0.2x to 2.0x of base, in 10 steps */
+  var mcids = [];
+  var steps = 10;
+  for (var i = 0; i < steps; i++) {
+    var mult = 0.2 + (i / (steps - 1)) * 1.8;
+    var val = baseMCID * mult;
+    /* For ratio measures, MCID is the ratio itself; reconstruct */
+    if (state.direction === 'ratio_below') {
+      /* baseMCID is the original MCID ratio (e.g. 0.95). Scale |log(mcid)| */
+      var logBase = Math.abs(Math.log(state.mcid));
+      var logNew = logBase * mult;
+      val = Math.exp(-logNew); /* ratio below 1 */
+    } else if (state.direction === 'ratio_above') {
+      var logBase2 = Math.log(state.mcid);
+      var logNew2 = logBase2 * mult;
+      val = Math.exp(logNew2);
+    }
+    mcids.push(val);
+  }
+
+  /* Also add the actual MCID if not close to an existing value */
+  var actualMCID = state.mcid;
+  var alreadyPresent = mcids.some(function(m) { return Math.abs(m - actualMCID) / (Math.abs(actualMCID) || 1) < 0.02; });
+  if (!alreadyPresent) {
+    mcids.push(actualMCID);
+    mcids.sort(function(a, b) { return a - b; });
+  }
+
+  var rows = mcids.map(function(m) {
+    var cls = classify(state.effect, state.ciLower, state.ciUpper, m, state.direction);
+    var pRes = computeProbBeyondMCID(state.effect, state.ciLower, state.ciUpper, m, state.direction);
+    var isCurrent = Math.abs(m - actualMCID) / (Math.abs(actualMCID) || 1) < 0.02;
+    return { mcid: m, classification: cls, prob: pRes.prob, isCurrent: isCurrent };
+  });
+
+  /* Table */
+  var tableHtml = '<table class="data-table"><thead><tr>';
+  tableHtml += '<th>MCID</th><th>Classification</th><th>P(Exceeds MCID)</th>';
+  tableHtml += '</tr></thead><tbody>';
+  rows.forEach(function(r) {
+    var rowClass = r.isCurrent ? ' class="sens-current"' : '';
+    var color = classificationColor(r.classification);
+    tableHtml += '<tr' + rowClass + '>';
+    tableHtml += '<td>' + escapeHtml(formatNum(r.mcid)) + (r.isCurrent ? ' (current)' : '') + '</td>';
+    tableHtml += '<td><span class="result-badge badge-' + color + '" style="font-size:0.72rem;padding:0.2rem 0.6rem">' +
+      escapeHtml(classificationLabel(r.classification)) + '</span></td>';
+    tableHtml += '<td>' + escapeHtml((r.prob * 100).toFixed(1) + '%') + '</td>';
+    tableHtml += '</tr>';
+  });
+  tableHtml += '</tbody></table>';
+  $sensitivityTableContainer.innerHTML = tableHtml;
+
+  /* Chart: bar chart of P(beyond MCID) for each MCID value */
+  var chartW = 600, chartH = 250;
+  var cm = { left: 80, right: 20, top: 20, bottom: 50 };
+  var cpW = chartW - cm.left - cm.right;
+  var cpH = chartH - cm.top - cm.bottom;
+
+  var svg = svgEl('svg', { width: chartW, height: chartH, viewBox: '0 0 ' + chartW + ' ' + chartH });
+
+  var barW = Math.min(30, (cpW / rows.length) * 0.7);
+  var gap = (cpW - barW * rows.length) / (rows.length + 1);
+
+  /* Y axis */
+  for (var yi = 0; yi <= 4; yi++) {
+    var yVal = yi * 25;
+    var yPos = cm.top + cpH - (yVal / 100) * cpH;
+    var gridLine = svgEl('line', {
+      x1: cm.left, y1: yPos, x2: cm.left + cpW, y2: yPos,
+      stroke: 'var(--border)', 'stroke-width': '1'
+    });
+    svg.appendChild(gridLine);
+    var yLabel = svgEl('text', {
+      x: cm.left - 8, y: yPos + 4, 'text-anchor': 'end',
+      'font-size': '10', fill: 'var(--text-muted)'
+    });
+    yLabel.textContent = yVal + '%';
+    svg.appendChild(yLabel);
+  }
+
+  /* Threshold lines at 50% and 80% */
+  [50, 80].forEach(function(thresh) {
+    var yy = cm.top + cpH - (thresh / 100) * cpH;
+    var tLine = svgEl('line', {
+      x1: cm.left, y1: yy, x2: cm.left + cpW, y2: yy,
+      stroke: thresh === 80 ? 'rgba(46,204,113,0.4)' : 'rgba(243,156,18,0.4)',
+      'stroke-width': '1', 'stroke-dasharray': '4,3'
+    });
+    svg.appendChild(tLine);
+  });
+
+  /* Bars */
+  rows.forEach(function(r, idx) {
+    var bx = cm.left + gap + idx * (barW + gap);
+    var bh = (r.prob * cpH);
+    var by = cm.top + cpH - bh;
+    var bColor = r.prob >= 0.80 ? '#2ecc71' : (r.prob >= 0.50 ? '#f39c12' : '#e74c3c');
+    if (r.isCurrent) bColor = 'var(--accent)';
+    var bar = svgEl('rect', {
+      x: bx, y: by, width: barW, height: Math.max(1, bh),
+      rx: 2, fill: bColor, opacity: r.isCurrent ? '1' : '0.7'
+    });
+    svg.appendChild(bar);
+
+    /* X label */
+    var xLbl = svgEl('text', {
+      x: bx + barW / 2, y: cm.top + cpH + 14, 'text-anchor': 'middle',
+      'font-size': '9', fill: r.isCurrent ? 'var(--accent)' : 'var(--text-muted)',
+      'font-weight': r.isCurrent ? '700' : '400',
+      transform: 'rotate(-30,' + (bx + barW / 2) + ',' + (cm.top + cpH + 14) + ')'
+    });
+    xLbl.textContent = formatNum(r.mcid);
+    svg.appendChild(xLbl);
+  });
+
+  /* Axis labels */
+  var yAxisLabel = svgEl('text', {
+    x: 14, y: cm.top + cpH / 2, 'text-anchor': 'middle',
+    'font-size': '11', fill: 'var(--text-secondary)',
+    transform: 'rotate(-90,14,' + (cm.top + cpH / 2) + ')'
+  });
+  yAxisLabel.textContent = 'P(Exceeds MCID)';
+  svg.appendChild(yAxisLabel);
+
+  var xAxisLabel = svgEl('text', {
+    x: cm.left + cpW / 2, y: chartH - 3, 'text-anchor': 'middle',
+    'font-size': '11', fill: 'var(--text-secondary)'
+  });
+  xAxisLabel.textContent = 'MCID Threshold';
+  svg.appendChild(xAxisLabel);
+
+  $sensitivityChartContainer.appendChild(svg);
+
+  /* Tipping point: find MCID value where classification changes */
+  renderTippingPoint(rows, actualMCID);
+}
+
+function renderTippingPoint(rows, actualMCID) {
+  if (state.classification === null) {
+    $tippingPointResult.innerHTML = '';
+    return;
+  }
+
+  var currentCls = state.classification;
+  var tippingMCID = null;
+  var tippingCls = null;
+
+  /* Search for the nearest MCID that has a different classification */
+  /* Use a finer grid for precision */
+  var baseMCID = Math.abs(state.mcid);
+  if (baseMCID === 0) baseMCID = 0.1;
+
+  var fineSteps = 200;
+  for (var i = 0; i < fineSteps; i++) {
+    var mult = 0.01 + (i / (fineSteps - 1)) * 3.0;
+    var testMCID;
+    if (state.direction === 'ratio_below') {
+      var logBase = Math.abs(Math.log(state.mcid));
+      testMCID = Math.exp(-logBase * mult);
+    } else if (state.direction === 'ratio_above') {
+      testMCID = Math.exp(Math.log(state.mcid) * mult);
+    } else {
+      testMCID = baseMCID * mult;
+    }
+    var cls = classify(state.effect, state.ciLower, state.ciUpper, testMCID, state.direction);
+    if (cls !== currentCls) {
+      tippingMCID = testMCID;
+      tippingCls = cls;
+      break;
+    }
+  }
+
+  /* Also search upward if not found */
+  if (tippingMCID === null) {
+    for (var j = fineSteps - 1; j >= 0; j--) {
+      var mult2 = 0.01 + (j / (fineSteps - 1)) * 3.0;
+      var testMCID2;
+      if (state.direction === 'ratio_below') {
+        var logBase2 = Math.abs(Math.log(state.mcid));
+        testMCID2 = Math.exp(-logBase2 * mult2);
+      } else if (state.direction === 'ratio_above') {
+        testMCID2 = Math.exp(Math.log(state.mcid) * mult2);
+      } else {
+        testMCID2 = baseMCID * mult2;
+      }
+      var cls2 = classify(state.effect, state.ciLower, state.ciUpper, testMCID2, state.direction);
+      if (cls2 !== currentCls) {
+        tippingMCID = testMCID2;
+        tippingCls = cls2;
+        break;
+      }
+    }
+  }
+
+  if (tippingMCID !== null) {
+    var html = '<div class="classification-box classification-amber">';
+    html += 'The classification would change from <strong>' + escapeHtml(classificationLabel(currentCls)) +
+      '</strong> to <strong>' + escapeHtml(classificationLabel(tippingCls)) + '</strong> ';
+    html += 'if the MCID were set to <strong>' + escapeHtml(formatNum(tippingMCID)) +
+      '</strong> instead of <strong>' + escapeHtml(formatNum(state.mcid)) + '</strong>.';
+    html += '</div>';
+    $tippingPointResult.innerHTML = html;
+  } else {
+    $tippingPointResult.innerHTML = '<div class="classification-box classification-green">' +
+      'The classification remains <strong>' + escapeHtml(classificationLabel(currentCls)) +
+      '</strong> across the tested range of MCID values (0.01x to 3.0x of the specified MCID).</div>';
+  }
+}
+
+/* ----- Report ----- */
+function renderReport() {
+  if (state.effect === null || state.mcid === null) {
+    $reportMethods.textContent = 'Run analysis from the Data Input tab first.';
+    $reportInterpretation.textContent = '';
+    return;
+  }
+
+  var methods = 'Clinical significance was assessed by comparing the pooled ' +
+    state.effectType + ' against a pre-specified Minimal Clinically Important Difference (MCID) of ' +
+    formatNum(state.mcid) + '. The pooled effect and its 95% confidence interval were evaluated ' +
+    'relative to the MCID threshold using four classification zones: (1) "Clinically Significant" ' +
+    'if the entire CI exceeds the MCID; (2) "Likely Clinically Significant" if the point estimate ' +
+    'exceeds the MCID but the CI crosses it; (3) "Uncertain Clinical Significance" if the point ' +
+    'estimate does not exceed the MCID but the CI does; and (4) "Not Clinically Significant" if ' +
+    'the entire CI falls below the MCID. The probability that the true effect exceeds the MCID ' +
+    'was estimated assuming a normal posterior distribution, with the standard error derived from ' +
+    'the 95% CI width (SE = CI width / 3.92).';
+
+  $reportMethods.textContent = methods;
+
+  var exceeds = (state.classification === 'significant' || state.classification === 'likely_significant');
+  var effectStr = formatNum(state.effect) + ' [95% CI: ' + formatNum(state.ciLower) + ' to ' + formatNum(state.ciUpper) + ']';
+
+  var interp = 'The pooled ' + state.effectType + ' of ' + effectStr + ' ' +
+    (exceeds ? 'exceeds' : 'does not exceed') + ' the MCID of ' + formatNum(state.mcid) +
+    ', suggesting the intervention ' + (exceeds ? 'is' : 'is not') + ' clinically meaningful. ' +
+    'The probability that the true effect exceeds the MCID is ' +
+    (state.probBeyond !== null ? (state.probBeyond * 100).toFixed(1) + '%' : 'N/A') + '. ' +
+    'Classification: ' + classificationLabel(state.classification) + '.';
+
+  $reportInterpretation.textContent = interp;
+}
+
+/* ===================================================================
+   Actions
+   =================================================================== */
+
+function runAnalysis() {
+  var eff = parseFloat($inputEffect.value);
+  var lo = parseFloat($inputCILower.value);
+  var hi = parseFloat($inputCIUpper.value);
+  var mcid = parseFloat($inputMCID.value);
+  var effectType = $inputEffectType.value;
+  var direction = $mcidDirection.value;
+
+  if (!isFinite(eff) || !isFinite(lo) || !isFinite(hi) || !isFinite(mcid)) {
+    alert('Please enter valid numeric values for effect, CI, and MCID.');
+    return;
+  }
+  if (lo > hi) {
+    alert('CI lower bound must be less than or equal to CI upper bound.');
+    return;
+  }
+  if ((direction === 'ratio_below' || direction === 'ratio_above') && (eff <= 0 || lo <= 0 || hi <= 0 || mcid <= 0)) {
+    alert('For ratio measures (RR/OR), all values must be positive.');
+    return;
+  }
+
+  state.effect = eff;
+  state.ciLower = lo;
+  state.ciUpper = hi;
+  state.mcid = mcid;
+  state.effectType = effectType;
+  state.direction = direction;
+
+  state.classification = classify(eff, lo, hi, mcid, direction);
+  var pRes = computeProbBeyondMCID(eff, lo, hi, mcid, direction);
+  state.probBeyond = pRes.prob;
+  state.se = pRes.se;
+
+  renderAll();
+}
+
+function renderAll() {
+  renderClassification();
+  renderGauge();
+  renderCIPlot();
+  renderProportion();
+  renderSensitivity();
+  renderReport();
+}
+
+function clearInputs() {
+  $inputEffect.value = '';
+  $inputCILower.value = '';
+  $inputCIUpper.value = '';
+  $inputMCID.value = '';
+  $inputEffectType.value = 'SMD';
+  $mcidDirection.value = 'negative';
+  state.effect = null;
+  state.ciLower = null;
+  state.ciUpper = null;
+  state.mcid = null;
+  state.classification = null;
+  state.probBeyond = null;
+  state.se = null;
+  renderAll();
+}
+
+function saveData() {
+  try {
+    var data = {
+      effect: $inputEffect.value,
+      ciLower: $inputCILower.value,
+      ciUpper: $inputCIUpper.value,
+      mcid: $inputMCID.value,
+      effectType: $inputEffectType.value,
+      direction: $mcidDirection.value
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(data));
+    alert('Data saved successfully.');
+  } catch (e) {
+    alert('Failed to save data: ' + e.message);
+  }
+}
+
+function loadData() {
+  try {
+    var raw = localStorage.getItem(LS_KEY);
+    if (!raw) { alert('No saved data found.'); return; }
+    var data = JSON.parse(raw);
+    $inputEffect.value = data.effect || '';
+    $inputCILower.value = data.ciLower || '';
+    $inputCIUpper.value = data.ciUpper || '';
+    $inputMCID.value = data.mcid || '';
+    $inputEffectType.value = data.effectType || 'SMD';
+    $mcidDirection.value = data.direction || 'negative';
+    alert('Data loaded successfully.');
+  } catch (e) {
+    alert('Failed to load data: ' + e.message);
+  }
+}
+
+function loadExample(key) {
+  var ex = EXAMPLES[key];
+  if (!ex) return;
+  $inputEffect.value = ex.effect;
+  $inputCILower.value = ex.ciLower;
+  $inputCIUpper.value = ex.ciUpper;
+  $inputMCID.value = ex.mcid;
+  $inputEffectType.value = ex.effectType;
+  $mcidDirection.value = ex.direction;
+  runAnalysis();
+}
+
+function loadMCIDFromLibrary(item) {
+  $inputMCID.value = item.mcid;
+  $inputEffectType.value = item.type;
+  $mcidDirection.value = item.direction;
+}
+
+/* ----- Export ----- */
+function exportCSV() {
+  if (state.effect === null) { alert('Run analysis first.'); return; }
+  var lines = [];
+  lines.push(['Field', 'Value'].map(csvSafe).join(','));
+  lines.push(['Effect Type', state.effectType].map(csvSafe).join(','));
+  lines.push(['Pooled Effect', state.effect].map(csvSafe).join(','));
+  lines.push(['CI Lower', state.ciLower].map(csvSafe).join(','));
+  lines.push(['CI Upper', state.ciUpper].map(csvSafe).join(','));
+  lines.push(['MCID', state.mcid].map(csvSafe).join(','));
+  lines.push(['Direction', directionLabel(state.direction)].map(csvSafe).join(','));
+  lines.push(['Classification', classificationLabel(state.classification)].map(csvSafe).join(','));
+  lines.push(['P(Exceeds MCID)', state.probBeyond !== null ? (state.probBeyond * 100).toFixed(1) + '%' : 'N/A'].map(csvSafe).join(','));
+
+  var blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  downloadBlob(blob, 'mcid-mapper-results.csv');
+}
+
+function exportJSON() {
+  if (state.effect === null) { alert('Run analysis first.'); return; }
+  var obj = {
+    effectType: state.effectType,
+    pooledEffect: state.effect,
+    ciLower: state.ciLower,
+    ciUpper: state.ciUpper,
+    mcid: state.mcid,
+    direction: state.direction,
+    classification: classificationLabel(state.classification),
+    classificationCode: state.classification,
+    probExceedsMCID: state.probBeyond !== null ? parseFloat((state.probBeyond).toFixed(4)) : null,
+    se: state.se
+  };
+  var blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json;charset=utf-8;' });
+  downloadBlob(blob, 'mcid-mapper-results.json');
+}
+
+function downloadBlob(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ===================================================================
+   MCID Library Rendering
+   =================================================================== */
+function renderLibrary() {
+  var $lib = document.getElementById('mcidLibrary');
+  var html = '';
+  MCID_LIBRARY.forEach(function(item, idx) {
+    html += '<button class="mcid-library-item" data-libindex="' + idx + '" ' +
+      'aria-label="Use ' + escapeHtml(item.name) + ' MCID" tabindex="0">';
+    html += '<div class="lib-name">' + escapeHtml(item.name) + '</div>';
+    html += '<div class="lib-value">' + escapeHtml(item.desc) + '</div>';
+    html += '</button>';
+  });
+  $lib.innerHTML = html;
+}
+
+/* ===================================================================
+   Event Binding
+   =================================================================== */
+
+/* Theme toggle */
+var savedTheme = null;
+try { savedTheme = localStorage.getItem('mcid-theme'); } catch(e) {}
+if (savedTheme === 'dark') document.body.classList.add('dark');
+
+document.getElementById('themeToggle').addEventListener('click', function() {
+  var isDark = document.body.classList.toggle('dark');
+  try { localStorage.setItem('mcid-theme', isDark ? 'dark' : 'light'); } catch(e) {}
+  this.textContent = isDark ? '\u2600' : '\u263E';
+});
+/* Set initial icon */
+document.getElementById('themeToggle').textContent = document.body.classList.contains('dark') ? '\u2600' : '\u263E';
+
+/* Tabs */
+var tabBtns = document.querySelectorAll('.tab-btn');
+var tabPanels = document.querySelectorAll('.tab-panel');
+tabBtns.forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    tabBtns.forEach(function(b) { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+    tabPanels.forEach(function(p) { p.classList.remove('active'); });
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected', 'true');
+    var panel = document.getElementById('panel-' + btn.getAttribute('data-tab'));
+    if (panel) panel.classList.add('active');
+  });
+  /* Keyboard navigation for tabs */
+  btn.addEventListener('keydown', function(e) {
+    var btns = Array.from(tabBtns);
+    var idx = btns.indexOf(btn);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      var next = btns[(idx + 1) % btns.length];
+      next.click();
+      next.focus();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      var prev = btns[(idx - 1 + btns.length) % btns.length];
+      prev.click();
+      prev.focus();
+    }
+  });
+});
+
+/* Buttons */
+$btnAnalyze.addEventListener('click', runAnalysis);
+$btnClear.addEventListener('click', clearInputs);
+$btnSave.addEventListener('click', saveData);
+$btnLoad.addEventListener('click', loadData);
+$btnExportCSV.addEventListener('click', exportCSV);
+$btnExportJSON.addEventListener('click', exportJSON);
+
+/* Examples */
+document.querySelectorAll('.example-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    loadExample(this.getAttribute('data-example'));
+  });
+});
+
+/* MCID Library clicks */
+document.getElementById('mcidLibrary').addEventListener('click', function(e) {
+  var item = e.target.closest('.mcid-library-item');
+  if (!item) return;
+  var idx = parseInt(item.getAttribute('data-libindex'), 10);
+  if (idx >= 0 && idx < MCID_LIBRARY.length) {
+    loadMCIDFromLibrary(MCID_LIBRARY[idx]);
+  }
+});
+
+/* Keyboard support for library items */
+document.getElementById('mcidLibrary').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') {
+    var item = e.target.closest('.mcid-library-item');
+    if (item) {
+      e.preventDefault();
+      item.click();
+    }
+  }
+});
+
+/* Auto-detect direction based on effect type */
+$inputEffectType.addEventListener('change', function() {
+  var val = this.value;
+  if (val === 'RR' || val === 'OR') {
+    $mcidDirection.value = 'ratio_below';
+  } else {
+    $mcidDirection.value = 'negative';
+  }
+});
+
+/* Initialize */
+renderLibrary();
+renderAll();
+
+/* Expose for testing */
+window.__MCID_MAPPER__ = {
+  normalCDF: normalCDF,
+  normalQuantile: normalQuantile,
+  classify: classify,
+  computeProbBeyondMCID: computeProbBeyondMCID,
+  classificationLabel: classificationLabel,
+  escapeHtml: escapeHtml,
+  csvSafe: csvSafe,
+  formatNum: formatNum,
+  EXAMPLES: EXAMPLES,
+  MCID_LIBRARY: MCID_LIBRARY,
+  getState: function() { return state; },
+  runAnalysis: runAnalysis,
+  loadExample: loadExample,
+  clearInputs: clearInputs,
+  setInputs: function(eff, lo, hi, mcid, effectType, direction) {
+    $inputEffect.value = eff;
+    $inputCILower.value = lo;
+    $inputCIUpper.value = hi;
+    $inputMCID.value = mcid;
+    $inputEffectType.value = effectType || 'SMD';
+    $mcidDirection.value = direction || 'negative';
+  }
+};
+
+})();
+</script>
+</body>
+</html>
