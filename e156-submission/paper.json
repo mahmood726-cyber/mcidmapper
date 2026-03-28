@@ -1,0 +1,96 @@
+{
+  "title": "MCID Mapper: Clinical Significance Assessment for Meta-Analytic Effect Estimates",
+  "slug": "mcid-mapper",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "body": "Can meta-analytic estimates be evaluated against minimal clinically important difference thresholds to distinguish statistical from clinical significance in a browser tool? The MCID Mapper accepts pooled effect sizes with confidence intervals and compares them against 12 validated thresholds covering pain, function, quality of life, and cardiometabolic outcomes across mean difference and standardized mean difference scales. The tool classifies results into four zones based on confidence interval position relative to MCID: clinically important, possibly important, unlikely important, and trivially small, with sensitivity analysis across plausible threshold values. For a pooled SMD of negative 0.35 with 95 percent CI negative 0.52 to negative 0.18 against a 0.5 MCID, classification is possibly important with 28 percent exceeding the threshold. Sensitivity analysis shows classification shifts to clinically important at thresholds below 0.30. This approach formalizes interpreting meta-analytic results against clinical relevance benchmarks. The limitation is that MCID values are population-dependent and the library may not match the specific population studied.",
+  "word_count": 156,
+  "sentence_count": 7,
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can meta-analytic estimates be evaluated against minimal clinically important difference thresholds to distinguish statistical from clinical significance in a browser tool?"
+    },
+    {
+      "role": "Dataset",
+      "text": "The MCID Mapper accepts pooled effect sizes with confidence intervals and compares them against 12 validated thresholds covering pain, function, quality of life, and cardiometabolic outcomes across mean difference and standardized mean difference scales."
+    },
+    {
+      "role": "Method",
+      "text": "The tool classifies results into four zones based on confidence interval position relative to MCID: clinically important, possibly important, unlikely important, and trivially small, with sensitivity analysis across plausible threshold values."
+    },
+    {
+      "role": "Primary result",
+      "text": "For a pooled SMD of negative 0.35 with 95 percent CI negative 0.52 to negative 0.18 against a 0.5 MCID, classification is possibly important with 28 percent exceeding the threshold."
+    },
+    {
+      "role": "Robustness",
+      "text": "Sensitivity analysis shows classification shifts to clinically important at thresholds below 0.30."
+    },
+    {
+      "role": "Interpretation",
+      "text": "This approach formalizes interpreting meta-analytic results against clinical relevance benchmarks."
+    },
+    {
+      "role": "Boundary",
+      "text": "The limitation is that MCID values are population-dependent and the library may not match the specific population studied."
+    }
+  ],
+  "notes": {
+    "app": "MCID Mapper v1.0",
+    "data": "12 validated MCID thresholds",
+    "code": "https://github.com/mahmood726-cyber/mcidmapper",
+    "doi": "",
+    "version": "1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "type": "methods",
+  "primary_estimand": "MCID classification zone",
+  "validation": {
+    "status": "pass",
+    "checks": [
+      {
+        "name": "single paragraph",
+        "ok": true,
+        "detail": "Body must not contain blank-line paragraph breaks."
+      },
+      {
+        "name": "sentence count",
+        "ok": true,
+        "detail": "Found 7 sentences."
+      },
+      {
+        "name": "word count",
+        "ok": true,
+        "detail": "Found 156 words."
+      },
+      {
+        "name": "no headings",
+        "ok": true,
+        "detail": "No markdown headings allowed in body."
+      },
+      {
+        "name": "no links",
+        "ok": true,
+        "detail": "No links or DOI links allowed in body."
+      },
+      {
+        "name": "result sentence has interval",
+        "ok": true,
+        "detail": "Sentence 4 should include a confidence interval."
+      },
+      {
+        "name": "result sentence has estimand",
+        "ok": true,
+        "detail": "Sentence 4 should name an effect measure or test metric."
+      },
+      {
+        "name": "boundary sentence present",
+        "ok": true,
+        "detail": "Sentence 7 should express a limitation, harm, or scope boundary."
+      }
+    ]
+  },
+  "schema": "e156-v0.2"
+}

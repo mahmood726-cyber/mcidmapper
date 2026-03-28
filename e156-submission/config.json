@@ -1,0 +1,57 @@
+{
+  "title": "MCID Mapper: Clinical Significance Assessment for Meta-Analytic Effect Estimates",
+  "slug": "mcid-mapper",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "path": "C:\\Models\\MCIDMapper",
+  "type": "methods",
+  "primary_estimand": "MCID classification zone",
+  "summary": "Browser-based tool comparing meta-analytic effects against MCID thresholds with four-zone clinical significance classification.",
+  "body": "Can meta-analytic estimates be evaluated against minimal clinically important difference thresholds to distinguish statistical from clinical significance in a browser tool? The MCID Mapper accepts pooled effect sizes with confidence intervals and compares them against 12 validated thresholds covering pain, function, quality of life, and cardiometabolic outcomes across mean difference and standardized mean difference scales. The tool classifies results into four zones based on confidence interval position relative to MCID: clinically important, possibly important, unlikely important, and trivially small, with sensitivity analysis across plausible threshold values. For a pooled SMD of negative 0.35 with 95 percent CI negative 0.52 to negative 0.18 against a 0.5 MCID, classification is possibly important with 28 percent exceeding the threshold. Sensitivity analysis shows classification shifts to clinically important at thresholds below 0.30. This approach formalizes interpreting meta-analytic results against clinical relevance benchmarks. The limitation is that MCID values are population-dependent and the library may not match the specific population studied.",
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can meta-analytic estimates be evaluated against minimal clinically important difference thresholds to distinguish statistical from clinical significance in a browser tool?"
+    },
+    {
+      "role": "Dataset",
+      "text": "The MCID Mapper accepts pooled effect sizes with confidence intervals and compares them against 12 validated thresholds covering pain, function, quality of life, and cardiometabolic outcomes across mean difference and standardized mean difference scales."
+    },
+    {
+      "role": "Method",
+      "text": "The tool classifies results into four zones based on confidence interval position relative to MCID: clinically important, possibly important, unlikely important, and trivially small, with sensitivity analysis across plausible threshold values."
+    },
+    {
+      "role": "Primary result",
+      "text": "For a pooled SMD of negative 0.35 with 95 percent CI negative 0.52 to negative 0.18 against a 0.5 MCID, classification is possibly important with 28 percent exceeding the threshold."
+    },
+    {
+      "role": "Robustness",
+      "text": "Sensitivity analysis shows classification shifts to clinically important at thresholds below 0.30."
+    },
+    {
+      "role": "Interpretation",
+      "text": "This approach formalizes interpreting meta-analytic results against clinical relevance benchmarks."
+    },
+    {
+      "role": "Boundary",
+      "text": "The limitation is that MCID values are population-dependent and the library may not match the specific population studied."
+    }
+  ],
+  "notes": {
+    "app": "MCID Mapper v1.0",
+    "data": "12 validated MCID thresholds",
+    "code": "https://github.com/mahmood726-cyber/mcidmapper",
+    "doi": "",
+    "version": "1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "affiliation": "Tahir Heart Institute",
+  "email": "mahmood.ahmad2@nhs.net",
+  "references": [
+    "Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. 2nd ed. Wiley; 2021.",
+    "Higgins JPT, Thompson SG, Deeks JJ, Altman DG. Measuring inconsistency in meta-analyses. BMJ. 2003;327(7414):557-560.",
+    "Cochrane Handbook for Systematic Reviews of Interventions. Version 6.4. Cochrane; 2023."
+  ]
+}
