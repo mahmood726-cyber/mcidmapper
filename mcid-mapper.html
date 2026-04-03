@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob:; font-src 'self';">
 <title>MCID Mapper — Clinical Significance Assessor</title>
 <style>
 /* ===== CSS Variables ===== */
@@ -376,6 +377,7 @@ body.dark .badge-red { color: #e74c3c; }
 </style>
 </head>
 <body>
+<a href="#panel-input" class="sr-only" style="position:absolute;left:-9999px" onfocus="this.style.cssText='position:fixed;top:0;left:0;z-index:9999;padding:8px 16px;background:var(--accent);color:#fff;font-size:1rem;text-decoration:none;border-radius:4px'" onblur="this.style.cssText='position:absolute;left:-9999px'">Skip to content</a>
 
 <!-- ===== Header ===== -->
 <header class="app-header">
