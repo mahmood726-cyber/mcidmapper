@@ -1,6 +1,6 @@
 Mahmood Ahmad
 Tahir Heart Institute
-author@example.com
+mahmood.ahmad2@nhs.net
 
 MCID Mapper: Clinical Significance Assessment for Meta-Analytic Effect Estimates
 
