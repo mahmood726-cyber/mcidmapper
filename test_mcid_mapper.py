@@ -159,12 +159,12 @@ class TestMCIDMapper(unittest.TestCase):
     # === Test 14: Dark mode toggle ===
     def test_14_dark_mode(self):
         self.reload()
-        body_classes = self.driver.find_element(By.TAG_NAME, 'body').get_attribute('class')
+        body_classes = self.driver.find_element(By.TAG_NAME, 'body').get_attribute('class') or ''
         was_dark = 'dark' in body_classes
         toggle = self.driver.find_element(By.ID, 'themeToggle')
         toggle.click()
         time.sleep(0.3)
-        body_classes2 = self.driver.find_element(By.TAG_NAME, 'body').get_attribute('class')
+        body_classes2 = self.driver.find_element(By.TAG_NAME, 'body').get_attribute('class') or ''
         is_dark_now = 'dark' in body_classes2
         self.assertNotEqual(was_dark, is_dark_now)
 
